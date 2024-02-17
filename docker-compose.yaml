@@ -1,0 +1,49 @@
+version: '3.7'
+services:
+  mysql:
+    container_name: banking_mysql
+    image: mysql:8.0.26
+    restart: on-failure
+    ports:
+      - "3306:3306"
+    expose:
+      - 3306
+    environment:
+      - MYSQL_ROOT_PASSWORD=centwong
+    volumes:
+      - mysql_volume:/var/lib/mysql
+    networks:
+      - banking_network
+  redis:
+    container_name: banking_redis
+    image: "redis:7.2.3"
+    ports:
+      - "6379:6379"
+    expose:
+      - 6379
+    restart: on-failure
+    networks:
+      - banking_network
+  nacos:
+    container_name: banking_nacos
+    image: nacos/nacos-server:v2.3.0
+    environment:
+      - MODE=standalone
+    # nacos port = https://blog.csdn.net/chengluchuang2753/article/details/123177536
+    ports:
+      - "8849:8848"
+      - "9849:9849"
+      - "9848:9848"
+    expose:
+      - 8848
+      - 9849
+      - 9848
+    networks:
+      - banking_network
+
+volumes:
+  mysql_volume:
+    name: mysql_volume
+
+networks:
+  banking_network:
