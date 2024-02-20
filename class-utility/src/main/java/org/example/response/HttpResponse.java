@@ -60,7 +60,7 @@ public class HttpResponse {
     @Setter
     @Getter
     public static class PaginationParam{
-        private Integer offset;
+        private Long offset;
         private Integer limit;
         private QueryParam param;
     }
