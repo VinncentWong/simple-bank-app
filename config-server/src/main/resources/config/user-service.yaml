@@ -1,0 +1,19 @@
+spring:
+  flyway:
+    url: jdbc:mysql://localhost:3306/user
+    locations: classpath:/db/migration
+    user: root
+    password: centwong
+  datasource:
+    url: jdbc:mysql://localhost:3306/user
+    username: root
+    password: centwong
+  jpa:
+    show-sql: true
+  cloud:
+    nacos:
+      discovery:
+        server-addr: localhost:8849
+
+jwt:
+  secret: test-centwong-123-456-789-101112-131415-161718-192021_AZXCVBNM<>?

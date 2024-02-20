@@ -11,7 +11,7 @@ import lombok.ToString;
 @ToString
 public class JwtToken {
 
-    private Long id;
+    private Object id;
 
     private String role;
 }

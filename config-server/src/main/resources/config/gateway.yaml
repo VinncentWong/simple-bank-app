@@ -3,3 +3,6 @@ spring:
     nacos:
       discovery:
         server-addr: http://localhost:8849
+
+jwt:
+  secret: test-centwong-123-456-789-101112-131415-161718-192021_AZXCVBNM<>?
