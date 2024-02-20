@@ -23,6 +23,6 @@ public class UserParam {
 
     @ParamColumn(name = "is_active")
     private Boolean isActive;
-
+  
     private HttpResponse.PaginationParam pgParam;
 }
