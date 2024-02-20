@@ -10,7 +10,7 @@ import java.util.Base64;
 @Slf4j
 public class JwtUtil {
 
-    public static String generateJwtToken(String secretToken, String role, Long id){
+    public static String generateJwtToken(String secretToken, String role, Object id){
         return Jwts
                 .builder()
                 .claim(JwtConstant.ID, id)
@@ -29,11 +29,8 @@ public class JwtUtil {
                     .getBody();
             var jwtToken = JwtToken
                     .builder();
-            var id = claims.get(JwtConstant.ID);
+            jwtToken.id(claims.get(JwtConstant.ID));
             var role = claims.get(JwtConstant.ROLE);
-            if(id != null){
-                jwtToken.id(Long.parseLong(String.valueOf((int)id)));
-            }
             if(role != null){
                 jwtToken.role((String)role);
             }

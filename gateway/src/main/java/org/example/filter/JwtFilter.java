@@ -12,19 +12,28 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cloud.gateway.filter.GatewayFilterChain;
 import org.springframework.cloud.gateway.filter.GlobalFilter;
 import org.springframework.cloud.gateway.support.ServerWebExchangeUtils;
-import org.springframework.core.Ordered;
+import org.springframework.core.annotation.Order;
 import org.springframework.core.io.buffer.DataBuffer;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpMethod;
+import org.springframework.http.MediaType;
+import org.springframework.http.server.PathContainer;
 import org.springframework.http.server.reactive.ServerHttpRequest;
 import org.springframework.http.server.reactive.ServerHttpResponse;
+import org.springframework.stereotype.Component;
 import org.springframework.web.server.ServerWebExchange;
+import org.springframework.web.util.pattern.PathPatternParser;
 import reactor.core.publisher.Mono;
 
 import java.net.URI;
 import java.util.List;
+import java.util.Map;
 import java.util.function.Predicate;
 
+@Component
 @Slf4j
-public class JwtFilter implements GlobalFilter, Ordered {
+@Order(1)
+public class JwtFilter implements GlobalFilter {
 
     @Autowired
     private ObjectMapper mapper;
@@ -32,8 +41,10 @@ public class JwtFilter implements GlobalFilter, Ordered {
     @Value("${jwt.secret}")
     private String jwtSecret;
 
-    private List<String> nonSecuredEndpoints = List.of(
-
+    private Map<String, List<HttpMethod>> nonSecuredEndpoints = Map.ofEntries(
+            Map.entry("/user", List.of(HttpMethod.GET, HttpMethod.POST)),
+            Map.entry("/user/login", List.of(HttpMethod.POST)),
+            Map.entry("/user/*", List.of(HttpMethod.GET))
     );
 
     @Override
@@ -44,11 +55,31 @@ public class JwtFilter implements GlobalFilter, Ordered {
         var res = exchange
                 .getResponse();
 
+        res.getHeaders()
+                .put(HttpHeaders.CONTENT_TYPE, List.of(MediaType.APPLICATION_JSON_VALUE));
+
         Predicate<ServerHttpRequest> isNonSecuredEndpoint = (r) -> {
             var path = r.getURI().getPath();
+            var method = r.getMethod();
+            log.info("req path: {}", path);
             return nonSecuredEndpoints
+                    .entrySet()
                     .stream()
-                    .anyMatch((s) -> s.contains(path));
+                    .anyMatch((entry) -> {
+                        var key = entry.getKey();
+                        var value = entry.getValue();
+
+                        var pathContainer = PathContainer.parsePath(path);
+                        var pathPattern = PathPatternParser
+                                .defaultInstance
+                                .parse(key);
+
+                        return pathPattern
+                                .matches(pathContainer)
+                                &&
+                                value.stream()
+                                        .anyMatch((m) -> m.equals(method));
+                    });
         };
 
         if(isNonSecuredEndpoint.test(req)){
@@ -59,7 +90,7 @@ public class JwtFilter implements GlobalFilter, Ordered {
             try{
                 var headers = req.getHeaders()
                         .get(HttpHeaderConstant.AUTHORIZATION);
-                if(!headers.isEmpty()){
+                if(headers != null){
                     var header = headers
                             .get(0);
                     if(StringUtils.isBlank(header) || !header.startsWith("Bearer")){
@@ -69,10 +100,12 @@ public class JwtFilter implements GlobalFilter, Ordered {
                                         false
                                 );
                         return res
-                                .writeWith(getDataBuffer(res, httpResponse));
+                                .writeWith(getDataBuffer(res, httpResponse))
+                                .then(Mono.fromRunnable(logResponse(exchange)));
                     } else {
                         var token = header.substring(7);
                         var data = JwtUtil.getTokenData(this.jwtSecret, token);
+                        log.info("extracted jwt token: {}", data);
                         exchange = exchange
                                 .mutate()
                                 .request(
@@ -93,7 +126,8 @@ public class JwtFilter implements GlobalFilter, Ordered {
                                     false
                             );
                     return res
-                            .writeWith(getDataBuffer(res, httpResponse));
+                            .writeWith(getDataBuffer(res, httpResponse))
+                            .then(Mono.fromRunnable(logResponse(exchange)));
                 }
             } catch(Exception ex){
                 var httpResponse = HttpResponse
@@ -102,14 +136,10 @@ public class JwtFilter implements GlobalFilter, Ordered {
                                 false
                         );
                 return res
-                        .writeWith(getDataBuffer(res, httpResponse));
+                        .writeWith(getDataBuffer(res, httpResponse))
+                        .then(Mono.fromRunnable(logResponse(exchange)));
             }
         }
-    }
-
-    @Override
-    public int getOrder() {
-        return 1;
     }
 
     @SneakyThrows

@@ -1,0 +1,33 @@
+syntax = "proto3";
+
+import "pg.proto";
+
+option java_outer_classname = "OuterUser";
+option java_multiple_files = true;
+
+package centwong.dubbo.clazz;
+
+message User{
+    string account_number = 1;
+    int64 balance = 2;
+    string name = 3;
+    string pin = 4;
+    bool is_active = 5;
+}
+
+message UserParam{
+    string account_number = 1;
+    repeated string account_numbers = 2;
+    bool is_active = 3;
+    PgParam pg_param = 4;
+}
+
+message ListUser{
+    repeated User user = 1;
+    Pagination pg = 2;
+}
+
+service UserService{
+    rpc Get(UserParam) returns (User);
+    rpc BatchGet(UserParam) returns (ListUser);
+}

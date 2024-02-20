@@ -139,7 +139,7 @@ public class QueryUtil {
 
                     if (pgParam.getOffset() != null && pgParam.getLimit() != null) {
                         limit = pgParam.getLimit();
-                        offset = pgParam.getOffset();
+                        offset = pgParam.getOffset().intValue();
                     }
 
                     var pgParamParam = pgParam.getParam();
@@ -180,7 +180,7 @@ public class QueryUtil {
                     }
                 }
 
-                log.info("field {} success", field.getName());
+                log.info("field {} success with value {}", field.getName(), value);
             } catch(Exception e) {
                 log.error("catch error on processing select: {}", e.getMessage());
                 throw new QueryException(e.getMessage());
@@ -190,7 +190,7 @@ public class QueryUtil {
             }
         }
 
-        log.info("processing finished");
+        log.info("processing select query finished");
 
         return ProcessParamResult.
                 <T>builder()
@@ -335,7 +335,7 @@ public class QueryUtil {
                         var pgParam = (HttpResponse.PaginationParam) value;
 
                         limit = pgParam.getLimit();
-                        offset = pgParam.getOffset();
+                        offset = pgParam.getOffset().intValue();
 
                         var pgParamParam = pgParam.getParam();
                         if (pgParamParam != null){
