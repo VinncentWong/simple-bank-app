@@ -1,0 +1,33 @@
+syntax = "proto3";
+
+option java_multiple_files = true;
+option java_outer_classname = "PgOuter";
+
+package centwong.dubbo.clazz;
+
+message PgParam{
+    int64 limit = 1;
+    int64 offset = 2;
+    QueryParam param = 3;
+}
+
+message QueryParam{
+    Sort sort = 1;
+}
+
+message Sort{
+    SortPosition sort_position = 1;
+    string column_name = 2;
+}
+
+enum SortPosition{
+    SORT_POSITION_ASC = 0;
+    SORT_POSITION_DESC = 1;
+}
+
+message Pagination{
+    int64 current_page = 1;
+    int64 current_element = 2;
+    int64 total_page = 3;
+    int64 total_element = 4;
+}

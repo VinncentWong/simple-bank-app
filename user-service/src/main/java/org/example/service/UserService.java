@@ -1,11 +1,16 @@
 package org.example.service;
 
+import centwong.dubbo.clazz.DubboUserServiceTriple;
+import centwong.dubbo.clazz.ListUser;
+import centwong.dubbo.clazz.Pagination;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.dubbo.config.annotation.DubboService;
 import org.example.entity.User;
 import org.example.entity.UserParam;
 import org.example.jwt.JwtUtil;
 import org.example.mapper.UserMapper;
 import org.example.repository.IRepository;
+import org.example.response.HttpResponse;
 import org.example.response.ServiceData;
 import org.example.util.BcryptUtil;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -20,7 +25,10 @@ import java.util.List;
 @Service
 @Transactional
 @Slf4j
-public class UserService implements IService{
+@DubboService
+public class UserService
+        extends DubboUserServiceTriple.UserServiceImplBase
+        implements IService{
 
     @Autowired
     private IRepository userRepository;
@@ -149,5 +157,77 @@ public class UserService implements IService{
                 .update(updateData, res.getData());
 
         this.userRepository.update(updatedData);
+    }
+
+    @Override
+    public centwong.dubbo.clazz.User get(centwong.dubbo.clazz.UserParam request) {
+        var param = convertParamPbIntoParamClass(request);
+        log.info("catch param dubbo get(): {}", param);
+
+        var res = this.userRepository.get(param);
+
+        var data = res.getData();
+
+        return convertUserEntityIntoUserPb(data);
+    }
+
+    @Override
+    public ListUser batchGet(centwong.dubbo.clazz.UserParam request) {
+        var param = convertParamPbIntoParamClass(request);
+
+        log.info("catch param dubbo batchGet(): {}", param);
+
+        var res = this.userRepository.getList(param);
+
+        var data = res.getData();
+
+        var pg = res.getPg();
+
+        return ListUser
+                .newBuilder()
+                .addAllUser(
+                        data.stream()
+                                .map(this::convertUserEntityIntoUserPb)
+                                .toList()
+                )
+                .setPg(convertPgEntityIntoPgPb(pg))
+                .build();
+    }
+
+    private UserParam convertParamPbIntoParamClass(centwong.dubbo.clazz.UserParam param){
+        return UserParam
+                .builder()
+                .accountNumber(param.getAccountNumber())
+                .accountNumbers(param.getAccountNumbersList())
+                .isActive(param.getIsActive())
+                .pgParam(
+                        HttpResponse.PaginationParam
+                                .builder()
+                                .offset(param.getPgParam().getOffset())
+                                .limit((int)param.getPgParam().getLimit())
+                                .build()
+                )
+                .build();
+    }
+
+    private centwong.dubbo.clazz.User convertUserEntityIntoUserPb(User user){
+        return centwong.dubbo.clazz.User
+                .newBuilder()
+                .setAccountNumber(user.getAccountNumber())
+                .setPin(user.getPin())
+                .setBalance(user.getBalance().longValue())
+                .setIsActive(user.getIsActive())
+                .setName(user.getName())
+                .build();
+    }
+
+    private centwong.dubbo.clazz.Pagination convertPgEntityIntoPgPb(HttpResponse.Pagination pg){
+        return Pagination
+                .newBuilder()
+                .setCurrentElement(pg.getCurrentElements())
+                .setCurrentPage(pg.getCurrentPage())
+                .setTotalElement(pg.getTotalElements())
+                .setTotalPage(pg.getTotalPage())
+                .build();
     }
 }

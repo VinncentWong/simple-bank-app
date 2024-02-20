@@ -223,6 +223,22 @@
 	</dependencyManagement>
 
 	<build>
+		<plugins>
+			<plugin>
+				<groupId>kr.motd.maven</groupId>
+				<artifactId>os-maven-plugin</artifactId>
+				<version>1.7.0</version> <!-- consider handling this version via properties as well -->
+				<executions>
+					<execution>
+						<phase>initialize</phase>
+						<goals>
+							<goal>detect</goal>
+						</goals>
+					</execution>
+				</executions>
+			</plugin>
+
+		</plugins>
 		<pluginManagement>
 			<plugins>
 				<plugin>

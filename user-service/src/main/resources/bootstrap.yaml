@@ -23,3 +23,19 @@ logging:
         orm:
           jdbc:
             bind: trace
+
+dubbo:
+  application:
+    name: dubbo-user-service
+    qos-port: 22224
+  protocol:
+    name: tri
+    port: -1
+  registry:
+    address: nacos://localhost:8849
+    check: false
+    parameters:
+      register-consumer-url: true
+  consumer:
+    # https://dubbo:apache.org/en/docs3-v2/java-sdk/advanced-features-and-usage/service/preflight-check/:
+    check: false

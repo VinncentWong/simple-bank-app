@@ -51,5 +51,6 @@ public class User {
     @JsonFormat(shape = JsonFormat.Shape.STRING)
     private LocalDateTime deletedAt;
 
+    @Column(name = "is_active")
     private Boolean isActive;
 }

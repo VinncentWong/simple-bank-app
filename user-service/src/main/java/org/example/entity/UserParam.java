@@ -21,5 +21,8 @@ public class UserParam {
     @ParamColumn(name = "account_number")
     private List<String> accountNumbers;
 
+    @ParamColumn(name = "is_active")
+    private Boolean isActive;
+  
     private HttpResponse.PaginationParam pgParam;
 }
